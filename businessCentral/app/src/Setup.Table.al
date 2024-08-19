@@ -179,6 +179,10 @@ table 82560 "ADLSE Setup"
             Caption = 'Export Company Database Tables';
             TableRelation = Company.Name;
         }
+        field(70; "Check no Deltas exist"; Boolean)
+        {
+            Caption = 'Check no Deltas exist';
+        }
 
     }
 

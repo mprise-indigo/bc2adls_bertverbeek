@@ -122,9 +122,12 @@ codeunit 82569 "ADLSE Execution"
     internal procedure ClearSchemaExportedOn()
     var
         ADLSESetup: Record "ADLSE Setup";
+        ADLSECommunication: Codeunit "ADLSE Communication";
         ADLSEExternalEvents: Codeunit "ADLSE External Events";
     begin
         ADLSESetup.GetSingleton();
+        if (ADLSESetup."Storage Type" = ADLSESetup."Storage Type"::"Azure Data Lake") and ADLSESetup."Check no Deltas exist" then
+            ADLSECommunication.CheckExistanceDeltas('', false);
         ADLSESetup."Schema Exported On" := 0DT;
         ADLSESetup.Modify();
         if GuiAllowed then

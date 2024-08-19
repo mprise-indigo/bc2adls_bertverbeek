@@ -177,6 +177,7 @@ table 82561 "ADLSE Table"
         ADLSETableLastTimestamp: Record "ADLSE Table Last Timestamp";
         ADLSESetup: Record "ADLSE Setup";
         ADLSECommunication: Codeunit "ADLSE Communication";
+        ADLSEUtil: Codeunit "ADLSE Util";
         Counter: Integer;
     begin
         if Rec.FindSet(true) then
@@ -195,6 +196,8 @@ table 82561 "ADLSE Table"
                 ADLSESetup.GetSingleton();
                 if (ADLSESetup."Delete Table") and (ADLSESetup."Storage Type" = ADLSESetup."Storage Type"::"Microsoft Fabric") then
                     ADLSECommunication.ResetTableExport(Rec."Table ID");
+                if ADLSESetup."Storage Type" = ADLSESetup."Storage Type"::"Azure Data Lake" then
+                    ADLSECommunication.RemoveDeltasFromDataLake(ADLSEUtil.GetDataLakeCompliantTableName(Rec."Table ID"));
 
                 OnAfterResetSelected(Rec);
 

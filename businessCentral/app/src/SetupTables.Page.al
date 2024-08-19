@@ -152,6 +152,7 @@ page 82561 "ADLSE Setup Tables"
                     SelectedADLSETable: Record "ADLSE Table";
                 begin
                     CurrPage.SetSelectionFilter(SelectedADLSETable);
+                    CheckExistingDeltas('');
                     SelectedADLSETable.ResetSelected();
                     CurrPage.Update();
                 end;
@@ -259,9 +260,11 @@ page 82561 "ADLSE Setup Tables"
         ADLSETableLastTimestamp: Record "ADLSE Table Last Timestamp";
         ADLSESetup: Codeunit "ADLSE Setup";
     begin
-        if ADLSETableLastTimestamp.ExistsUpdatedLastTimestamp(Rec."Table ID") then
+        if ADLSETableLastTimestamp.ExistsUpdatedLastTimestamp(Rec."Table ID") then begin
+            CheckExistingDeltas(ADLSEntityName);
             if not Confirm(WarnOfSchemaChangeQst, false) then
                 exit;
+        end;
         ADLSESetup.ChooseFieldsToExport(Rec);
         CurrPage.Update();
     end;
@@ -278,5 +281,15 @@ page 82561 "ADLSE Setup Tables"
         InvalidFieldNotification.Message := StrSubstNo(InvalidFieldConfiguredMsg, TableCaptionValue, ADLSEUtil.Concatenate(InvalidFieldList));
         InvalidFieldNotification.Scope := NotificationScope::LocalScope;
         InvalidFieldNotification.Send();
+    end;
+
+    local procedure CheckExistingDeltas(EntityName: Text)
+    var
+        ADLSESetupTable: Record "ADLSE Setup";
+        ADLSECommunication: Codeunit "ADLSE Communication";
+    begin
+        ADLSESetupTable.GetSingleton();
+        if (ADLSESetupTable."Storage Type" = ADLSESetupTable."Storage Type"::"Azure Data Lake") and ADLSESetupTable."Check no Deltas exist" then
+            ADLSECommunication.CheckExistanceDeltas(EntityName, false);
     end;
 }
