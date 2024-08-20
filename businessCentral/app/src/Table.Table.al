@@ -193,16 +193,14 @@ table 82561 "ADLSE Table"
                 ADLSEDeletedRecord.SetRange("Table ID", Rec."Table ID");
                 ADLSEDeletedRecord.DeleteAll();
 
-                ADLSESetup.GetSingleton();
-                if (ADLSESetup."Delete Table") and (ADLSESetup."Storage Type" = ADLSESetup."Storage Type"::"Microsoft Fabric") then
+                if (ADLSESetup."Delete Table") then
                     ADLSECommunication.ResetTableExport(Rec."Table ID");
-                if ADLSESetup."Storage Type" = ADLSESetup."Storage Type"::"Azure Data Lake" then
-                    ADLSECommunication.RemoveDeltasFromDataLake(ADLSEUtil.GetDataLakeCompliantTableName(Rec."Table ID"));
 
                 OnAfterResetSelected(Rec);
 
                 Counter += 1;
             until Rec.Next() = 0;
+        ADLSESetup.GetSingleton();
         if (ADLSESetup."Delete Table") and (ADLSESetup."Storage Type" = ADLSESetup."Storage Type"::"Microsoft Fabric") then
             Message(TablesResetTxt, Counter, TableResetExportedTxt)
         else

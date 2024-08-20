@@ -159,7 +159,7 @@ codeunit 82562 "ADLSE Communication"
         ADLSEGen2Util: Codeunit "ADLSE Gen 2 Util";
         ADLSEExecution: Codeunit "ADLSE Execution";
         CustomDimension: Dictionary of [Text, Text];
-        FileIdentifer: Text; //Guid;
+        FileIdentifer: Guid;
     begin
         if DataBlobPath <> '' then
             // Microsoft Fabric has a limit on the blob size. Create a new blob before reaching this limit
@@ -177,13 +177,10 @@ codeunit 82562 "ADLSE Communication"
                 Created := true;
                 BlobContentLength := 0;
             end;
-        if 1 = 1 then //FIXME ADK make an setting of some kind //'<Year><Month,2><Day,2><Hours24,2><Minutes,2><Seconds,2>')
-            FileIdentifer := format(CurrentDateTime, 0, 9)
-        else
-            FileIdentifer := ADLSEUtil.ToText(CreateGuid());
 
-        //DataBlobPath := StrSubstNo(DeltasFileCsvTok, EntityName, ADLSEUtil.ToText(FileIdentifer));
-        DataBlobPath := StrSubstNo(DeltasFileCsvTok, EntityName, FileIdentifer);
+        FileIdentifer := CreateGuid();
+
+        DataBlobPath := StrSubstNo(DeltasFileCsvTok, EntityName, ADLSEUtil.ToText(FileIdentifer));
         ADLSEGen2Util.CreateDataBlob(GetBaseUrl() + DataBlobPath, ADLSECredentials);
         Created := true;
         if EmitTelemetry then begin
@@ -409,12 +406,19 @@ codeunit 82562 "ADLSE Communication"
 
     procedure ResetTableExport(ltableId: Integer)
     var
+        ADLSESetup: Record "ADLSE Setup";
         ADLSEUtil: Codeunit "ADLSE Util";
         ADLSEGen2Util: Codeunit "ADLSE Gen 2 Util";
         Body: JsonObject;
     begin
+        ADLSESetup.GetSingleton();
         ADLSECredentials.Init();
-        ADLSEGen2Util.CreateOrUpdateJsonBlob(GetBaseUrl() + StrSubstNo(ResetTableExportTxt, ADLSEUtil.GetDataLakeCompliantTableName(ltableId)), ADLSECredentials, '', Body);
+        case ADLSESetup."Storage Type" of
+            "ADLSE Storage Type"::"Microsoft Fabric":
+                ADLSEGen2Util.CreateOrUpdateJsonBlob(GetBaseUrl() + StrSubstNo(ResetTableExportTxt, ADLSEUtil.GetDataLakeCompliantTableName(ltableId)), ADLSECredentials, '', Body);
+            "ADLSE Storage Type"::"Azure Data Lake":
+                RemoveDeltasFromDataLake(ADLSEUtil.GetDataLakeCompliantTableName(ltableId));
+        end;
     end;
 
     procedure CheckExistanceDeltas(ADLSEntityName: Text; HideDialog: Boolean) Exist: Boolean
@@ -442,26 +446,18 @@ codeunit 82562 "ADLSE Communication"
         ADLSEHttp: Codeunit "ADLSE Http";
         Response: Text;
         Url: Text;
-        ADLSEContainerUrlTxt: Label 'https://%1.dfs.core.windows.net/%2', Comment = '%1: Account name, %2: Container Name';
+        ADLSEContainerUrlTxt: Label 'https://%1.dfs.core.windows.net/%2', Comment = '%1: Account name, %2: Container Name', Locked = true;
     begin
         // DELETE https://{accountName}.{dnsSuffix}/{filesystem}/{path}
         // https://learn.microsoft.com/en-us/rest/api/storageservices/datalakestoragegen2/path/delete?view=rest-storageservices-datalakestoragegen2-2019-12-12
 
-        ADLSESetup.GetSingleton();
-        ADLSECredentials.Init();
-        if ADLSESetup."Storage Type" <> ADLSESetup."Storage Type"::"Azure Data Lake" then exit;
-
         Url := StrSubstNo(ADLSEContainerUrlTxt, ADLSESetup."Account Name", ADLSESetup.Container);
-        //        if ADLSEntityName <> '' then
         Url += '/deltas/' + ADLSEntityName;
         Url += '?recursive=true';
 
         ADLSEHttp.SetMethod("ADLSE Http Method"::Delete);
         ADLSEHttp.SetUrl(Url);
         ADLSEHttp.SetAuthorizationCredentials(ADLSECredentials);
-        if ADLSEHttp.InvokeRestApi(Response) then
-            Message('Succesfully emptied %1', EntityName)
-        else
-            Error('Can not delete deltas for %1 / The following error occurred: // %2', EntityName, Response);
+        ADLSEHttp.InvokeRestApi(Response)
     end;
 }
