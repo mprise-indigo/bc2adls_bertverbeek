@@ -62,7 +62,7 @@ report 82561 "ADLSE Schedule Task Assignment"
                                 Caption = 'Run On Mondays';
                                 ToolTip = 'Specifies that the job queue entry runs on Mondays.';
                             }
-                            field(RunOnTeusdaysControl; RunOnTeusdays)
+                            field(RunOnTeusdaysControl; RunOnTuesdays)
                             {
                                 ApplicationArea = All;
                                 Caption = 'Run On Tuesdays';
@@ -116,7 +116,7 @@ report 82561 "ADLSE Schedule Task Assignment"
         NoofMinutesBetweenRuns: Integer;
         RunOnSundays: Boolean;
         RunOnMondays: Boolean;
-        RunOnTeusdays: Boolean;
+        RunOnTuesdays: Boolean;
         RunOnWednesdays: Boolean;
         RunOnThursdays: Boolean;
         RunOnFridays: Boolean;
@@ -131,14 +131,14 @@ report 82561 "ADLSE Schedule Task Assignment"
         JobQueueEntry.Init();
         JobQueueEntry.Status := JobQueueEntry.Status::"On Hold";
         JobQueueEntry.Description := Description;
+        JobQueueEntry.Validate("Run on Mondays", RunOnMondays);
+        JobQueueEntry.Validate("Run on Tuesdays", RunOnTuesdays);
+        JobQueueEntry.Validate("Run on Wednesdays", RunOnWednesdays);
+        JobQueueEntry.Validate("Run on Thursdays", RunOnThursdays);
+        JobQueueEntry.Validate("Run on Fridays", RunOnFridays);
+        JobQueueEntry.Validate("Run on Saturdays", RunOnSaturdays);
+        JobQueueEntry.Validate("Run on Sundays", RunOnSundays);
         JobQueueEntry."No. of Minutes between Runs" := NoofMinutesBetweenRuns;
-        JobQueueEntry."Run on Mondays" := RunOnMondays;
-        JobQueueEntry."Run on Tuesdays" := RunOnTeusdays;
-        JobQueueEntry."Run on Wednesdays" := RunOnWednesdays;
-        JobQueueEntry."Run on Thursdays" := RunOnThursdays;
-        JobQueueEntry."Run on Fridays" := RunOnFridays;
-        JobQueueEntry."Run on Saturdays" := RunOnSaturdays;
-        JobQueueEntry."Run on Sundays" := RunOnSundays;
         JobQueueEntry."Object Type to Run" := JobQueueEntry."Object Type to Run"::Report;
         JobQueueEntry."Object ID to Run" := Report::"ADLSE Schedule Task Assignment";
         JobQueueEntry."Earliest Start Date/Time" := EarliestStartDateTime;

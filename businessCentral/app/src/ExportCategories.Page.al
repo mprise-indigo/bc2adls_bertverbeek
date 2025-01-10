@@ -1,7 +1,7 @@
 page 82577 "ADLSE Export Categories"
 {
     ApplicationArea = Basic, Suite;
-    Caption = 'Export Catgories';
+    Caption = 'Export Categories';
     PageType = List;
     SourceTable = "ADLSE Export Category";
 
